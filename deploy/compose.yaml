@@ -1,0 +1,38 @@
+# Déployé sur le VPS dans /opt/stacks/__APP_SLUG__/compose.yaml
+services:
+  __APP_SLUG__:
+    image: ghcr.io/vanyar23/__APP_SLUG__:latest
+    container_name: __APP_SLUG__
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: "__APP_PORT__"
+      APP_NAME: "__APP_NAME__"
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      # --- Routage Traefik ---
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.__APP_SLUG__.rule=Host(`__APP_SLUG__.vanyar.website`)"
+      - "traefik.http.routers.__APP_SLUG__.entrypoints=websecure"
+      - "traefik.http.routers.__APP_SLUG__.middlewares=chain-auth@file"
+      - "traefik.http.services.__APP_SLUG__.loadbalancer.server.port=__APP_PORT__"
+
+      # --- Découverte par le MainDashboard ---
+      - "vanyar.dashboard.enable=true"
+      - "vanyar.dashboard.name=__APP_NAME__"
+      - "vanyar.dashboard.description=Description courte de l'application"
+      - "vanyar.dashboard.url=https://__APP_SLUG__.vanyar.website"
+      - "vanyar.dashboard.icon=📦"
+      - "vanyar.dashboard.group=Applications"
+
+      # --- Mise à jour automatique par le script de synchronisation ---
+      - "vanyar.autoupdate=true"
+
+networks:
+  proxy:
+    external: true
