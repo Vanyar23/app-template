@@ -17,6 +17,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Installer les outils de lint
+        run: |
+          sudo apt-get update && sudo apt-get install -y yamllint
+          # yamllint disable-line rule:line-length
+          curl -sSL https://raw.githubusercontent.com/hadolint/hadolint/master/scripts/get_hadolint.sh | sudo bash
+
+      - name: make check (hadolint + yamllint)
+        run: make check
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -44,3 +53,12 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Scan Trivy
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: >-
+            ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version }}
+          severity: CRITICAL,HIGH
+          exit-code: '1'
