@@ -13,10 +13,10 @@ ENV NODE_ENV=production \
     PORT=3000
 WORKDIR /app
 
-# Exécution sans privilèges
-RUN addgroup -S app && adduser -S -G app app
+# Exécution sans privilèges (UID/GID 1000 pour Hadolint DL3066)
+RUN addgroup -g 1000 -S app && adduser -u 1000 -S -G app app
 COPY --from=build --chown=app:app /app /app
-USER app
+USER 1000
 
 EXPOSE 3000
 
